@@ -1,0 +1,12 @@
+{
+    "typeRoots": ["../node_modules/@types"],
+    "compilerOptions": {
+        "target": "ES6",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "incremental": true,
+        "outDir": "./src",
+        "sourceMap": true
+    },
+}
