@@ -1,10 +1,12 @@
 import { Vector } from "./physics/base";
-import { Point } from "./physics/objects";
+import { CameraInfo, Point, Universe } from "./physics/objects";
 import { PhysicalSystem } from "./physics/system";
-import { Renderer3D, Camera, Renderer } from "./frontend/renderers";
+import { Renderer3D } from "./frontend/renderers";
+import { Camera } from "./frontend/camera";
 import { MainLoop, MainLoopSettings } from "./frontend/loop"; 
 import { getKeywatcher } from "./frontend/watchers";
 import { Canvas, ProgressBar } from "./util/aliases";
+import { Action } from "./physics/force";
 
 
 declare var document: Document
@@ -12,52 +14,51 @@ declare const $: JQueryStatic
 
 
 function getSystem(): PhysicalSystem {
-	const speed = new Vector(0, 0, 0)
+	const gravitation = new Action((from, onto) => {
+		let u = from.pos.sub(onto.pos)
+		return u.unitary().scalarMul(from.mass*onto.mass/u.norm()**2)
+	})
 
-	const particles = [
+	const elements = [
+		new CameraInfo(),
 		new Point(
-			new Vector(0, 0, 1),
-			speed,
-			{ mass: 1 }
+			new Vector(0, 0, 0),
+			new Vector(0, 0, 0),
+			{ mass: 1 },
+			[gravitation],
+			{ color: "red", radius: 10 }
 		),
 		new Point(
-			new Vector(0, 0, 2),
-			speed,
-			{ mass: 1 }
+			new Vector(1, 0, 0),
+			new Vector(0, 0, -1),
+			{ mass: 1 },
+			[gravitation],
+			{ color: "blue", radius: 5 }
 		),
 		new Point(
-			new Vector(0, 1, 1),
-			speed,
-			{ mass: 1 }
+			new Vector(0, 1, 0),
+			new Vector(0, 0, -1),
+			{ mass: 1 },
+			[],
+			{ color: "blue", radius: 5 }
 		),
 		new Point(
-			new Vector(0, 1, 2),
-			speed,
-			{ mass: 1 }
+			new Vector(1, 1, 0),
+			new Vector(0, 0, 0.6),
+			{ mass: 1 },
+			[],
+			{ color: "blue", radius: 5 }
 		),
 		new Point(
-			new Vector(1, 0, 1),
-			speed,
-			{ mass: 1 }
+			new Vector(1, -1, 0),
+			new Vector(0, 0, 0.6),
+			{ mass: 1 },
+			[],
+			{ color: "blue", radius: 5 }
 		),
-		new Point(
-			new Vector(1, 0, 2),
-			speed,
-			{ mass: 1 }
-		),
-		new Point(
-			new Vector(1, 1, 1),
-			speed,
-			{ mass: 1 }
-		),
-		new Point(
-			new Vector(1, 1, 2),
-			speed,
-			{ mass: 1 }
-		)
 	]
 	
-	return new PhysicalSystem(particles)
+	return new PhysicalSystem(elements)
 }
 
 function getCamera(): Camera {
@@ -108,7 +109,7 @@ function initUI(mainloop: MainLoop) {
 		$("#reset-camera").trigger("click")
 	}) 
 
-	$(canvas).on("keydown", function (e) {
+	$(document).on("keydown", function (e) {
 		let direction: 1 | -1
 		switch (e.key) {
 			case "ArrowUp":
@@ -131,7 +132,7 @@ function initUI(mainloop: MainLoop) {
 		}
 	})
 
-	$(canvas).on("keydown", function (e) {
+	$(document).on("keydown", function (e) {
 		let direction: 1 | -1
 		switch (e.key) {
 			case "ArrowLeft":
@@ -154,10 +155,20 @@ function initUI(mainloop: MainLoop) {
 		}
 	})
 
-	$(canvas).on("focus", function (e)  {
-		$(this).css("border", "3px solid black")
-	}).on("blur", function (e) {
-		$(this).css("border", "1px solid black")
+	$(document).on("keydown", function (e) {
+		let zoom = 0.9 | 1.1
+		switch (e.key) {
+			case "w":
+				zoom = 0.9
+				break
+			case "c":
+				zoom = 1.1
+				break
+			default:
+				return
+		}
+
+		camera.zoomIn(zoom)
 	})
 }
 

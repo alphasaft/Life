@@ -1,5 +1,5 @@
 import { Vector } from "./base";
-import { PhysicalObject, Point } from "./objects";
+import { Item, Point } from "./objects";
 
 
 export type ForceExpression = (appliedTo: Point) => Vector

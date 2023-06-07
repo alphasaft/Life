@@ -1,6 +1,7 @@
 import { Vector } from "../physics/base";
 import { Delayer } from "../util/classes";
-import { Canvas } from "../util/aliases"
+import { Canvas } from "../util/aliases";
+import { Camera } from "./camera"
 
 
 export interface Renderer {
@@ -9,92 +10,9 @@ export interface Renderer {
 
     clear(): void
     addPoint(pos: Vector, color: string, radius: number): void
+    addText(x: number, y: number, text: string, color: string): void
     render(): void
 }
-
-
-export class Camera {
-    ux: Vector
-    uy: Vector
-    uz: Vector
-    center: Vector
-    width: number
-    height: number
-
-    static standard(width: number, height: number): Camera {
-        return new Camera(
-            new Vector(1, 0, 0),
-            new Vector(0, 1, 0),
-            new Vector(0, 0, 1),
-            new Vector(0, 0, 0),
-            width,
-            height
-        )
-    }
-
-    constructor(
-        ux: Vector,
-        uy: Vector,
-        uz: Vector,
-        center: Vector,
-        width: number,
-        height: number
-    ) {
-        this.ux = ux.unitary()
-        this.uy = uy.unitary()
-        this.uz = uz.unitary()
-        this.center = center
-        this.width = width
-        this.height = height
-    }
-
-    private rotate(uName: "ux" | "uy" | "uz", vName: "ux" | "uy" | "uz", angle: number) {
-        let u = this[uName]
-        let v = this[vName]
-        this[uName] = u.scalarMul(Math.cos(angle)).add(v.scalarMul(Math.sin(angle)))
-        this[vName] = v.scalarMul(Math.cos(angle)).add(u.scalarMul(-Math.sin(angle)))
-    }
-
-    rotateAroundX(angle: number) {
-        this.rotate("uy", "uz", angle)
-    }
-
-    rotateAroundY(angle: number) {
-        this.rotate("uz", "ux", angle)
-    }
-
-    rotateAroundZ(angle: number) {
-        this.rotate("ux", "uy", angle)
-    }
-
-    private move(axis: Vector, movement: number) {
-        console.log("Camera movement detected")
-        this.center = this.center.add(axis.scalarMul(movement))
-        console.log(this.center.toString())
-    }
-
-    moveAlongX(movement: number) {
-        this.move(this.ux, movement)
-    }
-
-    moveAlongY(movement: number) {
-        this.move(this.uy, movement)
-    }
-
-    moveAlongZ(movement: number) {
-        this.move(this.uz, movement)
-    }
-
-    copyState(camera: Camera) {
-        this.ux = camera.ux
-        this.uy = camera.uy
-        this.uz = camera.uz
-        this.center = camera.center
-        this.width = camera.width
-        this.height = camera.height
-    }
-}
-
 
 export class Renderer2D implements Renderer {
     readonly canvas: Canvas
@@ -121,12 +39,19 @@ export class Renderer2D implements Renderer {
             let relativePos = pos.sub(this.camera.center)
             let x = this.canvas.width / this.camera.width * relativePos.scalarProd(this.camera.ux)
             let y = this.canvas.height / this.camera.height * relativePos.scalarProd(this.camera.uy)
+            let r = radius*this.camera.zoom
 
             this.ctx.fillStyle = color
             this.ctx.beginPath()
-            this.ctx.ellipse(x, y, radius, radius, 0, 0, 2*Math.PI)
+            this.ctx.ellipse(x, y, r, r, 0, 0, 2*Math.PI)
             this.ctx.fill()
-        }, { priority: 0 })       
+        }, { priority: 0 })
+    }
+
+    addText(x: number, y: number, text: string, color: string): void {
+        this.ctx.font = "20px Arial"
+        this.ctx.fillStyle = color
+        this.ctx.fillText(text, x, y)
     }
 
     render() {
@@ -197,13 +122,18 @@ export class Renderer3D implements Renderer {
             if (projection === null) return
             
             let [x,y] = projection
-            let scaledRadius = this.scaleRadius(radius, pos)
+            let scaledRadius = this.scaleRadius(radius, pos) * this.camera.zoom
 
             this.ctx.fillStyle = color
             this.ctx.beginPath()
             this.ctx.ellipse(x, y, scaledRadius, scaledRadius, 0, 0, 2*Math.PI)
             this.ctx.fill()
         }, { priority: -pos.z })
+    }
+
+    addText(x: number, y: number, text: string, color: string): void {
+        this.ctx.fillStyle = color
+        this.ctx.fillText(text, x, y)
     }
 
     render(): void {

@@ -1,25 +1,25 @@
 import { Vector } from "./base"
 import { Force } from "./force"
-import { PhysicalObject } from "./objects"
+import { Item, Universe } from "./objects"
 import { Renderer } from "../frontend/renderers"
 
 
 
 export class PhysicalSystem {
-	objects: PhysicalObject[]
+	items: Item[]
 
-	constructor(objects: PhysicalObject[]) {
-		this.objects = objects
+	constructor(objects: Item[]) {
+		this.items = objects
 	}
 	
 	update(timelapse: number) {
-		let forces = this.objects.map((o) => o.generateForces()).flat()
+		let forces = this.items.map((o) => o.generateForces()).flat()
         let globalForce = new Force(point => forces.map(f => f.expression(point)).reduce((a,b) => a.add(b), Vector.zero))
-        this.objects.forEach(it => it.update(globalForce, timelapse))
+        this.items.forEach(it => it.update(globalForce, timelapse))
 	}
 
 	drawOn(space: Renderer) {
-		this.objects.forEach((it) => {
+		this.items.forEach((it) => {
 			it.drawOn(space)
 		})
 	}

@@ -2,7 +2,8 @@
 import { PhysicalSystem } from "../physics/system";
 import { fillWithDefault } from "../util/functions";
 import { Dynamic, get } from "./dynamic";
-import { Camera, Renderer } from "./renderers";
+import { Renderer } from "./renderers";
+import { Camera } from "./camera";
 
 
 export type MainLoopSettings = {

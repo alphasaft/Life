@@ -27,13 +27,13 @@ const defaultPointStyle: PointStyle = {
 
 
 
-export interface PhysicalObject {
+export interface Item {
 	generateForces(): Force[]
     update(globalForce: Force, timelapse: number): void
 	drawOn(space: Renderer): void
 }
 
-export class Universe implements PhysicalObject {
+export class Universe implements Item {
 	private globalForces: Force[]
 
 	constructor(...globalForces: Force[]) {
@@ -46,8 +46,19 @@ export class Universe implements PhysicalObject {
 }
 
 
+export class CameraInfo implements Item {
+	generateForces(): Force[] { return [] }
+	update(_globalForce: Force, _timelapse: number): void {}
+	drawOn(space: Renderer): void {
+		let camera = space.camera
+		let canvas = space.canvas
+		let info = camera.info()
+		space.addText(canvas.width - 5 * info.length, canvas.height - 10, info, "black")
+	}
+}
 
-export class Point implements PhysicalObject {
+
+export class Point implements Item {
 	pos: Vector
 	speed: Vector
 	properties: PhysicalProperties
@@ -58,10 +69,8 @@ export class Point implements PhysicalObject {
 		pos: Vector,
 		speed: Vector = new Vector(0,0,0),
 		properties: IncompletePhysicalProperties,
-		{ actions, style }: {
-			actions: Action[],
-			style: Partial<PointStyle>
-		} = { actions: [], style: {} }
+		actions: Action[] = [],
+		style: Partial<PointStyle> = {}
 	) {
 		this.pos = pos
 		this.speed = speed
@@ -98,7 +107,7 @@ export class Point implements PhysicalObject {
 }
 
 
-export class RigidLinks implements PhysicalObject {
+export class RigidLinks implements Item {
     private points: Point[]
 	private totalMass: number
 	private barycenterPos: Vector 
