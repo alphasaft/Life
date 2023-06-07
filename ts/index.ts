@@ -135,7 +135,7 @@ function initUI(mainloop: MainLoop) {
 		let direction: 1 | -1
 		switch (e.key) {
 			case "ArrowLeft":
-				diretion = 1
+				direction = 1
 				break
 			case "ArrowRight":
 				direction = -1
