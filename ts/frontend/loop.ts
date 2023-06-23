@@ -1,5 +1,5 @@
 
-import { PhysicalSystem } from "../physics/system";
+import { Universe } from "../physics/universe";
 import { fillWithDefault } from "../util/functions";
 import { Dynamic, get } from "./dynamic";
 import { Renderer } from "./renderers";
@@ -19,18 +19,18 @@ const defaultMainLoopSettings: MainLoopSettings = {
 
 export class MainLoop {
     private renderer: Renderer;
-    private system: PhysicalSystem;
+    private universe: Universe;
     private lastRendering: number;
     private settings: MainLoopSettings;
     private currentFrameHandle: number
 
     constructor(
         renderer: Renderer,
-        system: PhysicalSystem,
+        system: Universe,
         settings: Partial<MainLoopSettings> = {},
     ) {
         this.renderer = renderer;
-        this.system = system;
+        this.universe = system;
         this.settings = fillWithDefault(settings, defaultMainLoopSettings)
     }
 
@@ -43,8 +43,8 @@ export class MainLoop {
         window.cancelAnimationFrame(this.currentFrameHandle)
     }
 
-    setSystem(system: PhysicalSystem) {
-        this.system = system
+    setSystem(system: Universe) {
+        this.universe = system
     }
 
     getCanvas() {
@@ -56,7 +56,7 @@ export class MainLoop {
     }
 
     setCamera(camera: Camera) {
-        this.renderer.camera = camera
+        this.renderer.camera.copyState(camera)
     }
 
     private startClock() {
@@ -68,14 +68,15 @@ export class MainLoop {
 
     private update() {
         let now = (new Date()).getTime();
-        let elapsedSecs = (now - this.lastRendering) / 1000;
-        let ticks = Math.round(elapsedSecs / Math.min(elapsedSecs, this.settings.tickDuration));
+        let totalTimelapse = (now - this.lastRendering) / 1000;
+        let ticks = Math.round(totalTimelapse / Math.min(totalTimelapse, this.settings.tickDuration));
         this.lastRendering = now;
+
         for (let i = 0; i <= ticks; i++) {
-            this.system.update(elapsedSecs / ticks * get(this.settings.timeFactor));
+            this.universe.update(totalTimelapse / ticks * get(this.settings.timeFactor));
         }
-        this.renderer.clear();
-        this.system.drawOn(this.renderer);
-        this.renderer.render()
+        
+        this.universe.displayOn(this.renderer);
+        this.renderer.update(totalTimelapse)
     }
 }

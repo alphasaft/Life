@@ -1,83 +1,37 @@
-import { Vector } from "./physics/base";
-import { CameraInfo, Point, Universe } from "./physics/objects";
-import { PhysicalSystem } from "./physics/system";
+import { Vector } from "./physics/vector";
 import { Renderer3D } from "./frontend/renderers";
 import { Camera } from "./frontend/camera";
 import { MainLoop, MainLoopSettings } from "./frontend/loop"; 
 import { getKeywatcher } from "./frontend/watchers";
 import { Canvas, ProgressBar } from "./util/aliases";
-import { Action } from "./physics/force";
+import { Ref } from "./frontend/dynamic";
+import { chainExperiment, donutExperiment } from "./experiments";
+import { invert, matMul } from "./util/matrix";
 
 
 declare var document: Document
 declare const $: JQueryStatic
 
-
-function getSystem(): PhysicalSystem {
-	const gravitation = new Action((from, onto) => {
-		let u = from.pos.sub(onto.pos)
-		return u.unitary().scalarMul(from.mass*onto.mass/u.norm()**2)
-	})
-
-	const elements = [
-		new CameraInfo(),
-		new Point(
-			new Vector(0, 0, 0),
-			new Vector(0, 0, 0),
-			{ mass: 1 },
-			[gravitation],
-			{ color: "red", radius: 10 }
-		),
-		new Point(
-			new Vector(1, 0, 0),
-			new Vector(0, 0, -1),
-			{ mass: 1 },
-			[gravitation],
-			{ color: "blue", radius: 5 }
-		),
-		new Point(
-			new Vector(0, 1, 0),
-			new Vector(0, 0, -1),
-			{ mass: 1 },
-			[],
-			{ color: "blue", radius: 5 }
-		),
-		new Point(
-			new Vector(1, 1, 0),
-			new Vector(0, 0, 0.6),
-			{ mass: 1 },
-			[],
-			{ color: "blue", radius: 5 }
-		),
-		new Point(
-			new Vector(1, -1, 0),
-			new Vector(0, 0, 0.6),
-			{ mass: 1 },
-			[],
-			{ color: "blue", radius: 5 }
-		),
-	]
-	
-	return new PhysicalSystem(elements)
-}
+var originalLog = console.log;
+console.log = (...objs: any[]) => originalLog(...objs.map(obj => JSON.parse(JSON.stringify(obj))))
 
 function getCamera(): Camera {
-	return Camera.standard(24, 14)
+	return Camera.standard(
+		new Vector(0, 0, 0),
+		24,
+		14
+	)
+
+	/* return new Camera(
+		new Vector(1, 0, 0),
+		new Vector(0, 0, 1),
+		new Vector(0, -1, 0),
+		new Vector(0, 4, 2),
+		24,
+		14,
+		2.59
+	) */
 }
-
-
-function getMainloop() {
-	let canvas = document.getElementById("canvas") as Canvas
-	let camera = Camera.standard(24, 14)
-	let renderer = new Renderer3D(canvas, camera)
-	let system = getSystem()
-	let settings: MainLoopSettings = {
-		tickDuration: 0.00001,              
-		timeFactor: () => 10**($<ProgressBar>("#speed-bar").get(0).value-1),
-	}
-	return new MainLoop(renderer, system, settings)
-}
-
 
 function initUI(mainloop: MainLoop) {
 	let canvas = mainloop.getCanvas()
@@ -86,18 +40,18 @@ function initUI(mainloop: MainLoop) {
 	let xPressed = getKeywatcher(canvas, "x")
 	let yPressed = getKeywatcher(canvas, "y")
 	let zPressed = getKeywatcher(canvas, "z")
-	
+	let anchor = new Ref(new Vector(0, 0, 0))
 
 	$("#speed-bar").on("mousemove", function(this: ProgressBar, e) {
 		const width = this.clientWidth
-		const leftX = this.offsetLeft
-		let value = (e.screenX - leftX)/width*this.max
+		const leftX = this.clientLeft
+		let value = (e.offsetX - leftX)/width*this.max
 		this.value = value
 		$("#speed-percentage").text(Math.round((10**(this.value-1)*100)).toString() + "%")
 	})
 	
 	$("#reset-system").on("click", function(e) {
-		mainloop.setSystem(getSystem())
+		mainloop.setSystem(chainExperiment())
 	})
 
 	$("#reset-camera").on("click", function (e) {
@@ -111,6 +65,7 @@ function initUI(mainloop: MainLoop) {
 
 	$(document).on("keydown", function (e) {
 		let direction: 1 | -1
+
 		switch (e.key) {
 			case "ArrowUp":
 				direction = 1
@@ -173,6 +128,19 @@ function initUI(mainloop: MainLoop) {
 }
 
 
+function getMainloop() {
+	let canvas = document.getElementById("canvas") as Canvas
+	let camera = getCamera()
+	let renderer = new Renderer3D(canvas, camera)
+	let system = chainExperiment()
+	let settings: MainLoopSettings = {
+		tickDuration: 0.0001,  
+		timeFactor: () => 10**($<ProgressBar>("#speed-bar").get(0)!.value-1),
+	}
+	return new MainLoop(renderer, system, settings)
+}
+
+
 function main() {
 	let mainloop = getMainloop()
 	initUI(mainloop)
@@ -183,3 +151,4 @@ function main() {
 if (typeof document !== "undefined") {
 	main()
 }
+ 

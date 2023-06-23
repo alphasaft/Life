@@ -4,10 +4,13 @@ export class Vector {
 	readonly y: number
 	readonly z: number
 
-	static zero = new Vector(0,0,0)
+	static zero = new Vector(0, 0, 0)
+	static ux = new Vector(1, 0, 0)
+	static uy = new Vector(0, 1, 0)
+	static uz = new Vector(0, 0, 1)
 
 	static fromDirection(direction: Vector, norm: number): Vector {
-		return direction.scalarMul(norm/direction.norm())
+		return direction.times(norm/direction.norm())
 	}
 
 	constructor(x: number, y: number, z: number) {
@@ -20,8 +23,20 @@ export class Vector {
 		return Math.sqrt(this.x**2 + this.y ** 2 + this.z ** 2)
 	}
 
+	norm2(): number {
+		return this.x**2 + this.y ** 2 + this.z ** 2
+	}
+
+	orthogonal(): Vector {
+		return new Vector(
+			this.x + this.y,
+			this.y + this.z,
+			this.z + this.x,
+		).vectorProd(this)
+	}
+
 	unitary(): Vector {
-		return this.scalarMul(1/this.norm())
+		return this.times(1/this.norm())
 	}
 
 	add(other: Vector): Vector {
@@ -37,10 +52,10 @@ export class Vector {
 	}
 
 	unaryMinus(): Vector {
-		return this.scalarMul(-1)
+		return this.times(-1)
 	}
 
-	scalarMul(scalar: number): Vector {
+	times(scalar: number): Vector {
 		return new Vector(
 			scalar * this.x,
 			scalar * this.y,
@@ -64,14 +79,29 @@ export class Vector {
 		)
 	}
 
-    projectOnto(u: Vector, v: Vector) {
-		let w = u.vectorProd(v).unitary()
-        return this.sub(w.scalarMul(this.scalarProd(w)))
+	along(n: Vector) {
+		return n.times(this.scalarProd(n)/n.norm2())
+	}
+
+    orthogonalProjection(n: Vector) {
+        return this.sub(this.along(n))
     }
+
+	orthogonalSymetry(n: Vector) {
+		return this.sub(this.along(n).times(2))
+	}
 
 	angle(other: Vector): number {
 		if (other === Vector.zero || this === Vector.zero) return 0
 		return Math.acos(this.scalarProd(other)/(this.norm()*other.norm()))
+	}
+
+	hasOnePositiveCoordinate() {
+		return this.x >= 0 || this.y >= 0 || this.z >= 0
+	}
+
+	hasAllPositiveCoordinate() {
+		return this.x >= 0 && this.y >= 0 && this.z >= 0
 	}
 
 	toString() {
