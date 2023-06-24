@@ -33,7 +33,6 @@ export class StringConstraint extends Action {
                     bindingsEquationsMatrix[i][i] = 1/masses[i] + 1/masses[i+1]
                     if (i < n-1) bindingsEquationsMatrix[i][i+1] = -scalarProds[i+1]/masses[i+1]
                 }
-                
 
                 let bindingsCoeffs = matMul(invert(bindingsEquationsMatrix), speedDeltas).map(row => row[0])
                 
