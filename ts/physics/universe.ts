@@ -26,6 +26,10 @@ export class Universe {
 
 	private collectArguments(arity: number, predicate: (p: Point) => boolean): Point[][] {
 		let validPoints = this.points.filter(predicate)
+		if (arity == Infinity) {
+			return [validPoints]
+		}
+
 		let collect: (arity: number) => Point[][] = arity => {
 			if (arity === 0) return [[]]
 			return validPoints.flatMap(p => collect(arity-1)

@@ -132,7 +132,7 @@ function getMainloop() {
 	let renderer = new Renderer3D(canvas, camera)
 	let system = chainExperiment()
 	let settings: MainLoopSettings = {
-		tickDuration: 0.01,  
+		tickDuration: 0.001,  
 		timeFactor: () => 10**($<ProgressBar>("#speed-bar").get(0)!.value-1),
 	}
 	return new MainLoop(renderer, system, settings)

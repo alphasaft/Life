@@ -10,8 +10,8 @@ export class StringConstraint extends Action {
         super(
             ActionType.ConstraintAction,
             new Only(ids),
-            ids.length,
-            measureTime(points => {
+            Infinity,
+            (points, timelapse) => {
                 if (rigid) {
                     points = shuffled(points)
                 } else {
@@ -33,6 +33,7 @@ export class StringConstraint extends Action {
                     bindingsEquationsMatrix[i][i] = 1/masses[i] + 1/masses[i+1]
                     if (i < n-1) bindingsEquationsMatrix[i][i+1] = -scalarProds[i+1]/masses[i+1]
                 }
+                
 
                 let bindingsCoeffs = matMul(invert(bindingsEquationsMatrix), speedDeltas).map(row => row[0])
                 
@@ -40,7 +41,7 @@ export class StringConstraint extends Action {
                     if (i > 0) points[i].addSpeed(links[i-1].times(-bindingsCoeffs[i-1]/masses[i]))
                     if (i < n) points[i].addSpeed(links[i].times(bindingsCoeffs[i]/masses[i]))
                 }
-            })
+            }
         )   
     }
 }

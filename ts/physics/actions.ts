@@ -92,7 +92,7 @@ export class Action {
     }
 
     execute(points: Point[], timelapse: number) {
-        if (points.length !== this.arity) throw TypeError("Points count not matching arity.")
+        if (points.length !== this.arity && this.arity !== Infinity) throw TypeError("Points count not matching arity.")
         this.body(points, timelapse)
     }
 }

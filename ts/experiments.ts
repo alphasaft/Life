@@ -113,6 +113,18 @@ export function chainExperiment(): Universe {
             new Vector(0, 0, 0),
             { mass: 1 }
         ),
+        new Point(
+            "partner-3",
+            new Vector(2, -3, 1),
+            new Vector(0, 0, 0),
+            { mass: 1 }
+        ),
+        new Point(
+            "partner-4",
+            new Vector(2, -3, 3),
+            new Vector(0, 0, 0),
+            { mass: 1 }
+        ),
     ]
 
     let actions = [
@@ -128,7 +140,7 @@ export function chainExperiment(): Universe {
             0.2,
             { restitution: 1, friction: 0 }
         ),
-        new StringConstraint(["prisonner", "partner-1", "partner-2"])
+        new StringConstraint(["prisonner", "partner-1", "partner-2", "partner-3", "partner-4"])
     ]
 
     let graphics = [
