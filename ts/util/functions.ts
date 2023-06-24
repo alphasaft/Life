@@ -19,3 +19,25 @@ export function roundAt(x: number, afterComa: number): string {
     return asString.substring(0, before + (asString.includes(".") ? 1 : 0) + (asString.includes("-") ? 1 : 0) + afterComa)
 }
 
+export function measureTime<Function extends (...args: any[]) => any>(f: Function): Function {
+    return function(...args: any[]) {
+        let begin = (new Date()).getTime()
+        let result = f(...args)
+        let end = (new Date()).getTime()
+        console.log(`Function ${f.name} took ${end - begin} ms to execute.`)
+        return result
+    } as Function
+}
+
+export function reorganizeBy<A,B>(items: A[], keys: B[], mapper: (x: A) => B): A[] {
+    return keys.map(k => {
+        let item = items.find(x => mapper(x) === k) 
+        if (item === undefined) throw Error("reorganizeBy failure due to unrecognized key.")
+        return item
+    })
+}
+
+export function shuffled<A>(l: A[]): A[] {
+    let lst = l.slice()
+    return lst.sort((_a, _b) => Math.random() - 0.5)
+}

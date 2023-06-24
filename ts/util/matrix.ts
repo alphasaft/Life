@@ -6,7 +6,7 @@ function dims(m: Matrix): [number, number] {
     return [m.length, m[0].length]
 }
 
-function zeros(n: number, p: number): Matrix {
+export function zeros(n: number, p: number): Matrix {
     return range(n).map(i => range(p).map(j => 0))
 }
 

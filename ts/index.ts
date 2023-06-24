@@ -12,8 +12,6 @@ import { invert, matMul } from "./util/matrix";
 declare var document: Document
 declare const $: JQueryStatic
 
-var originalLog = console.log;
-console.log = (...objs: any[]) => originalLog(...objs.map(obj => JSON.parse(JSON.stringify(obj))))
 
 function getCamera(): Camera {
 	return Camera.standard(
@@ -134,7 +132,7 @@ function getMainloop() {
 	let renderer = new Renderer3D(canvas, camera)
 	let system = chainExperiment()
 	let settings: MainLoopSettings = {
-		tickDuration: 0.0001,  
+		tickDuration: 0.01,  
 		timeFactor: () => 10**($<ProgressBar>("#speed-bar").get(0)!.value-1),
 	}
 	return new MainLoop(renderer, system, settings)
@@ -142,6 +140,9 @@ function getMainloop() {
 
 
 function main() {
+	// TODO : Introduce corrective terms to strings
+	// TODO : Optimize computations in O(n)
+
 	let mainloop = getMainloop()
 	initUI(mainloop)
 	mainloop.run()

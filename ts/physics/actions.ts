@@ -10,8 +10,8 @@ export let ActionType = sealed(class ActionType {
     constructor(priority: number) { this.priority = priority }
 
     static BaseAction = new ActionType(0)
-    static ContactAction = new ActionType(1)
     static ConstraintAction = new ActionType(2)
+    static ContactAction = new ActionType(1)
     static CorrectiveAction = new ActionType(3)
 })
 

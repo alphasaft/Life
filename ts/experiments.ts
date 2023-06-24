@@ -20,7 +20,7 @@ export function donutExperiment(): Universe {
 			new Vector(0, 0, 2),
 			3,
 			0.1,
-			{ restitution: 1.05, friction: 0 }
+			{ restitution: 105, friction: 0 }
 		),
 		new Action(
 			ActionType.CorrectiveAction,
@@ -98,21 +98,21 @@ export function chainExperiment(): Universe {
         new Point(
             "prisonner",
             new Vector(0, -1.9, 2),
-            new Vector(-30, 0, 0),
+            new Vector(-50, 0, 0),
             { mass: 1 }
         ),
         new Point(
             "partner-1",
             new Vector(0, -3, 2),
             new Vector(0, 0, 0),
-            { mass: 1 }
+            { mass: 10 }
         ),
         new Point(
             "partner-2",
-            new Vector(0, -4, 2),
+            new Vector(2, -3, 2),
             new Vector(0, 0, 0),
             { mass: 1 }
-        )
+        ),
     ]
 
     let actions = [
@@ -120,23 +120,19 @@ export function chainExperiment(): Universe {
             WholeSpace,
             (p) => new Vector(0, -9.81*p.mass, 0)
         ),
-        new Force(
-            WholeSpace,
-            (p) => p.speed.times(-0.3)
-        ),
         new CylinderContact(
             new Vector(0, 0, 2),
             Vector.uz,
-            2,
+            2.9,
             1,
-            0.1,
-            { restitution: 0.9, friction: 0 }
+            0.2,
+            { restitution: 1, friction: 0 }
         ),
         new StringConstraint(["prisonner", "partner-1", "partner-2"])
     ]
 
     let graphics = [
-        new PointGraphic("(prisonner|partner-1|partner-2)", {})
+        new PointGraphic("(prisonner|partner-\d*)")
     ]
 
     return new Universe(points, actions, graphics)
