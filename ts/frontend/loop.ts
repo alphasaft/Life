@@ -1,9 +1,10 @@
 
 import { Universe } from "../physics/universe";
-import { fillWithDefault } from "../util/functions";
+import { fillWithDefault, tryAndRethrow } from "../util/functions";
 import { Dynamic, get } from "./dynamic";
 import { Renderer } from "./renderers";
 import { Camera } from "./camera";
+import { Canvas } from "../util/aliases";
 
 
 export type MainLoopSettings = {
@@ -47,7 +48,7 @@ export class MainLoop {
         this.universe = system
     }
 
-    getCanvas() {
+    getCanvas(): Canvas {
         return this.renderer.canvas
     }
 
@@ -67,16 +68,27 @@ export class MainLoop {
     }
 
     private update() {
-        let now = (new Date()).getTime();
-        let totalTimelapse = (now - this.lastRendering) / 1000;
-        let ticks = Math.round(totalTimelapse / Math.min(totalTimelapse, this.settings.tickDuration));
-        this.lastRendering = now;
+        tryAndRethrow(
+            () => {
+                let now = (new Date()).getTime();
+                let totalTimelapse = (now - this.lastRendering) / 1000;
+                let ticks = Math.round(totalTimelapse / Math.min(totalTimelapse, this.settings.tickDuration));
+                this.lastRendering = now;
 
-        for (let i = 0; i <= ticks; i++) {
-            this.universe.update(totalTimelapse / ticks * get(this.settings.timeFactor));
-        }
-        
-        this.universe.displayOn(this.renderer);
-        this.renderer.update(totalTimelapse)
+                for (let i = 0; i <= ticks; i++) {
+                    this.universe.update(totalTimelapse / ticks * get(this.settings.timeFactor));
+                }
+            
+                this.universe.displayOn(this.renderer);
+                this.renderer.update(totalTimelapse)
+            }, 
+            (e) => {
+                if (typeof e === "object" && e !== null && "message" in e) {
+                    alert(`Something went wrong. Error : ${e.message}.`)
+                } else {
+                    alert("Something went wrong. Unable to obtain an error message.")
+                }
+            }
+        )
     }
 }

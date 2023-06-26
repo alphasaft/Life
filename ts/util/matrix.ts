@@ -1,13 +1,17 @@
 import { range } from "./functions"
 
-type Matrix = number[][]
+export type Matrix = number[][]
 
 function dims(m: Matrix): [number, number] {
     return [m.length, m[0].length]
 }
 
 export function zeros(n: number, p: number): Matrix {
-    return range(n).map(i => range(p).map(j => 0))
+    return make(n, p, () => 0)
+}
+
+export function make(n: number, p: number, mij: (i: number, j: number) => number): Matrix {
+    return range(n).map(i => range(p).map(j => mij(i, j)))
 }
 
 
@@ -38,7 +42,6 @@ function transvection(m: Matrix, i: number, j: number, lambda: number) {
 function idMatrix(n: number): Matrix {
     return range(n).map(i => range(n).map(j => i === j ? 1 : 0))
 }
-
 
 export function invert(m: Matrix): Matrix {
     let [n, p] = dims(m)

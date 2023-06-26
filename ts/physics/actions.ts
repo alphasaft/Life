@@ -9,18 +9,18 @@ export let ActionType = sealed(class ActionType {
 
     constructor(priority: number) { this.priority = priority }
 
-    static BaseAction = new ActionType(0)
-    static ConstraintAction = new ActionType(2)
+    static StandardAction = new ActionType(0)
     static ContactAction = new ActionType(1)
+    static ConstraintAction = new ActionType(2)
     static CorrectiveAction = new ActionType(3)
 })
 
 export interface ActionTarget {
-    contains(point: Point): boolean
+    includes(point: Point): boolean
 }
 
 export let WholeSpace: ActionTarget = {
-    contains(point: Point): boolean {
+    includes(_point: Point): boolean {
         return true
     }
 }
@@ -32,7 +32,7 @@ export class Only implements ActionTarget {
         this.pointIds = ids
     }
 
-    contains(point: Point): boolean {
+    includes(point: Point): boolean {
         return this.pointIds.includes(point.id)
     }
 }
@@ -44,7 +44,7 @@ export class Excluding implements ActionTarget {
         this.excluded = excluded
     }
 
-    contains(point: Point): boolean {
+    includes(point: Point): boolean {
         return !this.excluded.includes(point)
     }
 }
@@ -62,7 +62,7 @@ export class CuboidArea implements ActionTarget {
         return a <= x && x <= b
     }
 
-    contains(point: Point): boolean {
+    includes(point: Point): boolean {
         let pos = point.pos
         let p1 = this.p1
         let p2 = this.p2
@@ -73,54 +73,8 @@ export class CuboidArea implements ActionTarget {
 }
 
 
-export class Action {
+export interface Action {
     type: ActionType
-    target: ActionTarget
-    arity: number
-    body: (points: Point[], timelapse: number) => void
 
-    constructor(
-        type: ActionType,
-        target: ActionTarget,
-        arity: number,
-        body: (points: Point[], timelapse: number) => void,
-    ) {
-        this.type = type
-        this.target = target
-        this.arity = arity
-        this.body = body
-    }
-
-    execute(points: Point[], timelapse: number) {
-        if (points.length !== this.arity && this.arity !== Infinity) throw TypeError("Points count not matching arity.")
-        this.body(points, timelapse)
-    }
-}
-
-export class Force extends Action {
-    constructor(
-        target: ActionTarget,
-        expression: (point: Point) => Vector,
-    ) {
-        super(
-            ActionType.BaseAction,
-            target,
-            1,
-            ([p], timelapse) => p.addSpeed(expression(p).times(1/p.mass).times(timelapse))
-        )
-    }
-}
-
-export class Interaction extends Action {
-    constructor(
-        target: ActionTarget,
-        expression: (pointA: Point, pointB: Point) => Vector,
-    ) {
-        super(
-            ActionType.BaseAction,
-            target,
-            2,
-            ([a, b], timelapse) => { b.addSpeed(expression(a, b).times(1/b.mass).times(timelapse)) }
-        )
-    }
+    execute(points: Point[], timelapse: number): void
 }

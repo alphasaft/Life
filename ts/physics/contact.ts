@@ -1,65 +1,71 @@
 import { Action, ActionType, WholeSpace } from "./actions"
+import { Point } from "./point"
 import { Vector } from "./vector"
 
 
 type ContactCoeffs = { restitution: number, friction: number }
 
 
-export class RectContact extends Action {
-    constructor(
-        begin: Vector,
-        xVector: Vector,
-        yVector: Vector,
-        thickness: number,
-        { restitution: restitutionCoeff, friction: frictionCoeff }: ContactCoeffs,
-    ) {
-        let uz = xVector.vectorProd(yVector).unitary()
-        let end = begin.add(xVector).add(yVector)
+export class SurfaceContact implements Action {
+    type: ActionType = ActionType.ContactAction
 
-        super(
-            ActionType.ContactAction,
-            WholeSpace,
-            1,
-            ([p]) => {
-                let pos = p.pos
-                let posFromBegin = pos.sub(begin)
-                let endFromPos = end.sub(pos)
-                if (posFromBegin.scalarProd(xVector) < 0 || posFromBegin.scalarProd(yVector) < 0) return
-                if (endFromPos.scalarProd(xVector) < 0 || endFromPos.scalarProd(yVector) < 0) return
+    
+    private surfaceDescriptor: (pos: Vector) => boolean
+    private normalVector: (pos: Vector) => Vector
+    private coeffs: ContactCoeffs
 
-                let distance = pos.sub(begin).scalarProd(uz)
-                if (Math.abs(distance) > thickness) return
-                else {
-                    if (p.speed.scalarProd(uz) * distance < 0) {
-                        let newSpeed = p.speed.orthogonalProjection(uz).times(1 - frictionCoeff).sub(uz.times(restitutionCoeff*p.speed.scalarProd(uz)))
-                        p.setSpeed(newSpeed)
-                    }
-                }
-            }
-        )
-    }
-}
-
-export class SurfaceContact extends Action {
     constructor(
         surfaceDescriptor: (pos: Vector) => boolean,
         normalVector: (pos: Vector) => Vector,
         coeffs: ContactCoeffs
     ) {
-        super(
-            ActionType.ContactAction,
-            WholeSpace,
-            1,
-            ([p]) => {
-                if (surfaceDescriptor(p.pos)) {
-                    let n = normalVector(p.pos)
-                    if (p.speed.scalarProd(n) < 0) {
-                        p.setSpeed(p.speed.orthogonalProjection(n).times(1 - coeffs.friction).sub(p.speed.along(n).times(coeffs.restitution)))
-                    }
+       this.surfaceDescriptor = surfaceDescriptor
+       this.normalVector = normalVector
+       this.coeffs = coeffs
+    }
+
+    execute(points: Point[], timelapse: number): void {
+        for (let p of points) {
+            if (this.surfaceDescriptor(p.pos)) {
+                let n = this.normalVector(p.pos)
+                if (p.speed.scalarProd(n) < 0) {
+                    p.setSpeed(p.speed.orthogonalProjection(n).times(1 - this.coeffs.friction).sub(p.speed.along(n).times(this.coeffs.restitution)))
                 }
-            })
+            }
+        }
     }
 }
+
+export class RectContact extends SurfaceContact {
+    constructor(
+        begin: Vector,
+        xVector: Vector,
+        yVector: Vector,
+        thickness: number,
+        coeffs: ContactCoeffs,
+    ) {
+        let uz = xVector.vectorProd(yVector).unitary()
+
+        super(
+            pos => {
+                let relPos = pos.sub(begin)
+                return (
+                    relPos.scalarProd(xVector) > 0 
+                    && relPos.scalarProd(yVector) > 0
+                    && relPos.scalarProd(xVector) < xVector.norm2()
+                    && relPos.scalarProd(yVector) < yVector.norm2()
+                    && Math.abs(relPos.scalarProd(uz)) < thickness
+                )
+            },
+            pos => {
+                let relPos = pos.sub(begin)
+                return uz.times(relPos.scalarProd(uz))
+            },
+            coeffs
+        )
+    }
+}
+
 
 export class CylinderContact extends SurfaceContact {
     constructor(

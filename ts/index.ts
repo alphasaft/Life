@@ -5,19 +5,22 @@ import { MainLoop, MainLoopSettings } from "./frontend/loop";
 import { getKeywatcher } from "./frontend/watchers";
 import { Canvas, ProgressBar } from "./util/aliases";
 import { Ref } from "./frontend/dynamic";
-import { chainExperiment, donutExperiment } from "./experiments";
-import { invert, matMul } from "./util/matrix";
+import { overloadTest, thePrism } from "./experiments";
+import { Universe } from "./physics/universe";
 
 
 declare var document: Document
 declare const $: JQueryStatic
 
+function getUniverse(): Universe {
+	return overloadTest()
+}
 
 function getCamera(): Camera {
 	return Camera.standard(
 		new Vector(0, 0, 0),
-		24,
-		14
+		100,
+		100*14/24
 	)
 
 	/* return new Camera(
@@ -38,7 +41,6 @@ function initUI(mainloop: MainLoop) {
 	let xPressed = getKeywatcher(canvas, "x")
 	let yPressed = getKeywatcher(canvas, "y")
 	let zPressed = getKeywatcher(canvas, "z")
-	let anchor = new Ref(new Vector(0, 0, 0))
 
 	$("#speed-bar").on("mousemove", function(this: ProgressBar, e) {
 		const width = this.clientWidth
@@ -49,7 +51,7 @@ function initUI(mainloop: MainLoop) {
 	})
 	
 	$("#reset-system").on("click", function(e) {
-		mainloop.setSystem(chainExperiment())
+		mainloop.setSystem(getUniverse())
 	})
 
 	$("#reset-camera").on("click", function (e) {
@@ -130,12 +132,12 @@ function getMainloop() {
 	let canvas = document.getElementById("canvas") as Canvas
 	let camera = getCamera()
 	let renderer = new Renderer3D(canvas, camera)
-	let system = chainExperiment()
+	let universe = getUniverse()
 	let settings: MainLoopSettings = {
-		tickDuration: 0.001,  
+		tickDuration: 0.01,  
 		timeFactor: () => 10**($<ProgressBar>("#speed-bar").get(0)!.value-1),
 	}
-	return new MainLoop(renderer, system, settings)
+	return new MainLoop(renderer, universe, settings)
 }
 
 

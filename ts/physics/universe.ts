@@ -17,27 +17,8 @@ export class Universe {
 	}
 	
 	update(timelapse: number) {
-		this.actions.forEach(action => {
-			let possibleArguments = this.collectArguments(action.arity, p => action.target.contains(p) )
-			possibleArguments.forEach(args => action.execute(args, timelapse))
-		})
+		this.actions.forEach(action => action.execute(this.points, timelapse))
 		this.points.forEach(p => p.update(timelapse))
-	}
-
-	private collectArguments(arity: number, predicate: (p: Point) => boolean): Point[][] {
-		let validPoints = this.points.filter(predicate)
-		if (arity == Infinity) {
-			return [validPoints]
-		}
-
-		let collect: (arity: number) => Point[][] = arity => {
-			if (arity === 0) return [[]]
-			return validPoints.flatMap(p => collect(arity-1)
-				.filter(args => !args.includes(p))
-				.map(args => args.concat(p))
-			)
-		}
-		return collect(arity)
 	}
 
 	displayOn(space: Renderer) {

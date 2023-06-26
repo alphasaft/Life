@@ -1,4 +1,8 @@
 
+export function apply<T, R>(x: T, f: (x: T) => R) {
+    return f(x)
+}
+
 export function sumBy<T>(iterable: T[], mapper: (arg: T) => number) {
     return iterable.map(mapper).reduce((a,b) => a+b)
 }
@@ -32,7 +36,7 @@ export function measureTime<Function extends (...args: any[]) => any>(f: Functio
 export function reorganizeBy<A,B>(items: A[], keys: B[], mapper: (x: A) => B): A[] {
     return keys.map(k => {
         let item = items.find(x => mapper(x) === k) 
-        if (item === undefined) throw Error("reorganizeBy failure due to unrecognized key.")
+        if (item === undefined) throw Error("reorganizeBy failure due to unrecognized key '" + k + "'.")
         return item
     })
 }
@@ -40,4 +44,22 @@ export function reorganizeBy<A,B>(items: A[], keys: B[], mapper: (x: A) => B): A
 export function shuffled<A>(l: A[]): A[] {
     let lst = l.slice()
     return lst.sort((_a, _b) => Math.random() - 0.5)
+}
+
+export function tryAndRethrow(block: () => void, errorCallback: (e: unknown) => void) {
+    let toRethrow: unknown | undefined = undefined
+    try {
+        block()
+    } catch (e: unknown) {
+        errorCallback(e)
+        toRethrow = e
+    }
+    if (toRethrow) {
+        throw toRethrow
+    }
+}
+
+export function safeDiv(a: number, b: number): number {
+    if (b === 0) throw Error("Can't divide by 0 with safeDiv.")
+    return a/b
 }
