@@ -3,13 +3,13 @@ import { CameraInfo, PointGraphic } from "./physics/graphics";
 import { Point } from "./physics/point";
 import { Universe } from "./physics/universe";
 import { ActionType, WholeSpace, Action, CuboidArea } from "./physics/actions";
-import { RectContact, SphereContact } from "./physics/contact";
+import { SphereContact } from "./physics/contact";
 import { range } from "./util/functions";
-import { OptimizedExperimentalStringConstraint, StringConstraint } from "./physics/structures";
+import { StringConstraint, DeprecatedStringConstraint } from "./physics/structures";
 import { Force, Interaction } from "./physics/forces";
 
 
-export function donutExperiment(): Universe {
+export function donut(): Universe {
 	const g = 9.81
 
 	const actions: Action[] = [
@@ -58,6 +58,7 @@ export function donutExperiment(): Universe {
 	return new Universe(donut, actions, graphics)
 }
 
+
 function protonExperiment(): Universe {
 	let points = [
 		new Point(
@@ -82,7 +83,7 @@ function protonExperiment(): Universe {
 				return ab.unitary().times(0.01 * p1.mass * p2.mass / ab.norm2())
 			}
 		),
-		new StringConstraint(["proton-1", "electron-1"])
+		new DeprecatedStringConstraint(["proton-1", "electron-1"])
 	]
 
 	let graphics = [
@@ -95,91 +96,15 @@ function protonExperiment(): Universe {
 }
 
 export function chainExperiment(): Universe {
-    let points = [
-        new Point(
-            "prisonner",
-            new Vector(0, 0, 2),
+	let n = 200
+    let points = range(n).map(i =>
+    	new Point(
+            `point-${i+1}`,
+            new Vector(0, i, 2),
             new Vector(0, 0, 0),
             { mass: 1 }
-        ),
-        new Point(
-            "partner-1",
-            new Vector(2, 0, 2),
-            new Vector(0, 0, 0),
-            { mass: 1 }
-        ),
-        new Point(
-            "partner-2",
-            new Vector(3, 0, 2),
-            new Vector(0, 0, 0),
-            { mass: 1 }
-        ),
-    ]
-
-    let actions = [
-        new Force(
-            WholeSpace,
-            (p) => new Vector(0, -9.81*p.mass, 0)
-        ),
-        new RectContact(
-			new Vector(1, -2, 1),
-			new Vector(-2, 0, 0),
-			new Vector(0, 0, 2),
-			0.5,
-            { restitution: 1, friction: 0 }
-        ),
-        new StringConstraint(["prisonner", "partner-1", "partner-2"])
-    ]
-
-    let graphics = [
-        new PointGraphic("(prisonner|partner-\d*)"),
-		new CameraInfo()
-    ]
-
-    return new Universe(points, actions, graphics)
-}
-
-export function thePrism(): Universe {
-	let a = 1/Math.sqrt(2)
-
-    let points = [
-        new Point(
-            "point-1",
-            new Vector(0, 0, 2),
-            new Vector(10, 0, 0),
-            { mass: 1 }
-        ),
-        new Point(
-            "point-2",
-            new Vector(a, a, 2),
-            new Vector(0, 0, 0),
-            { mass: 1 }
-        ),
-        new Point(
-            "point-3",
-            new Vector(0, a, 2+a),
-            new Vector(0, 0, 0),
-            { mass: 1 }
-        ),
-        new Point(
-            "point-4",
-            new Vector(0, a, 2-a),
-            new Vector(0, 5, 0),
-            { mass: 1 }
-        ),
-        new Point(
-            "point-5",
-            new Vector(-a, a, 2),
-            new Vector(0, 15, 0),
-            { mass: 1 }
-        ),
-        new Point(
-            "point-6",
-            new Vector(0, 2*a, 2),
-            new Vector(10, 0, 0),
-            { mass: 1 }
-        ),
-    ]
+        )
+	)
 
     let actions = [
         new Force(
@@ -187,25 +112,27 @@ export function thePrism(): Universe {
             (p) => new Vector(0, -9.81*p.mass, 0)
         ),
 		new Force(
-			WholeSpace,
-			p => p.speed.times(-0.7)
+			{ 
+				includes(point) { 
+					let id = point.id
+					return parseInt(id.substring(6, id.length)) % 20 === 0
+				} 
+			},
+			(p) => new Vector(10, 0, 0)
 		),
-        new RectContact(
-			new Vector(100, -100, -100),
-			new Vector(-200, 200, 0),
-			new Vector(0, 0, 200),
-			0.5,
-            { restitution: 1, friction: 0 }
-        ),
-        new StringConstraint(range(6).map(i => `point-${i+1}`), true)
+		new Force(
+			WholeSpace,
+			p => p.speed.times(-1)
+		),
+        new StringConstraint(range(n).map(i => `point-${i+1}`))
     ]
 
     let graphics = [
-        new PointGraphic("point-\d*"),
+        new PointGraphic("point-\\d*"),
 		new CameraInfo()
     ]
 
-	return new Universe(points, actions, graphics)
+    return new Universe(points, actions, graphics)
 }
 
 
@@ -237,7 +164,7 @@ export function overloadTest(): Universe {
 			},
 			_p => new Vector(20, 0, 0)
 		),
-		new StringConstraint(range(n).map(i => `point-${i+1}`))
+		new DeprecatedStringConstraint(range(n).map(i => `point-${i+1}`))
 	]
 
 	let graphics = [

@@ -19,7 +19,7 @@ export class PointGraphic implements GraphicItem {
     static defaultPointStyle: PointStyle = { radius: 10, color: "black" }
 
     constructor(idRegex: string, style: Partial<PointStyle> = {}, fadeoutDuration: number = 0) {
-        this.idRegex = new RegExp(idRegex)
+        this.idRegex = new RegExp(`^${idRegex}$`)
         this.style = fillWithDefault(style, PointGraphic.defaultPointStyle)
         this.fadeoutDuration = fadeoutDuration
     }

@@ -4,34 +4,24 @@ import { Camera } from "./frontend/camera";
 import { MainLoop, MainLoopSettings } from "./frontend/loop"; 
 import { getKeywatcher } from "./frontend/watchers";
 import { Canvas, ProgressBar } from "./util/aliases";
-import { Ref } from "./frontend/dynamic";
-import { overloadTest, thePrism } from "./experiments";
+import { chainExperiment } from "./experiments";
 import { Universe } from "./physics/universe";
+import { Builder, Procedure, PropertyRetriever } from "./frontend/procedure";
 
 
 declare var document: Document
 declare const $: JQueryStatic
 
 function getUniverse(): Universe {
-	return overloadTest()
+	return chainExperiment()
 }
 
 function getCamera(): Camera {
 	return Camera.standard(
 		new Vector(0, 0, 0),
-		100,
-		100*14/24
-	)
-
-	/* return new Camera(
-		new Vector(1, 0, 0),
-		new Vector(0, 0, 1),
-		new Vector(0, -1, 0),
-		new Vector(0, 4, 2),
 		24,
-		14,
-		2.59
-	) */
+		14
+	)
 }
 
 function initUI(mainloop: MainLoop) {
@@ -128,6 +118,34 @@ function initUI(mainloop: MainLoop) {
 }
 
 
+class A {
+	a: number
+	b: string 
+
+	constructor(a: number, b: string) {
+		this.a = a
+		this.b = b
+	}
+
+	sayHello() {
+		alert("a : " + this.a + ", b : " + this.b)
+	}
+}
+
+
+let proc = new Procedure(
+	"test",
+	container => Builder.anonymousProvider(
+		A,
+		[new PropertyRetriever("a", "Enter a", parseInt), new PropertyRetriever("b", "Enter b", x => x)],
+		container
+	),
+	myAInstance => {
+		myAInstance.sayHello()
+	}
+)
+
+
 function getMainloop() {
 	let canvas = document.getElementById("canvas") as Canvas
 	let camera = getCamera()
@@ -143,8 +161,8 @@ function getMainloop() {
 
 function main() {
 	// TODO : Introduce corrective terms to strings
-	// TODO : Optimize computations in O(n)
 
+	proc.execute(document.getElementById("workshop")!)
 	let mainloop = getMainloop()
 	initUI(mainloop)
 	mainloop.run()
